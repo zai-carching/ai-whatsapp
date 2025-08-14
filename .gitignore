@@ -1,0 +1,31 @@
+# --- Environment & Secrets ---
+.env
+
+# --- Python ---
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# --- Virtual Environments ---
+venv/
+.venv/
+env/
+ENV/
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
+
+# --- Logs ---
+*.log
+
+# --- IDEs ---
+.vscode/
+.idea/
+
+# --- Ngrok config & files ---
+*.ngrok.log
+ngrok.yml

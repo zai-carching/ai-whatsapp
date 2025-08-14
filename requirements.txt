@@ -1,0 +1,5 @@
+fastapi==0.116.1
+uvicorn
+openai==1.99.9
+python-dotenv
+pinecone==7.3.0
