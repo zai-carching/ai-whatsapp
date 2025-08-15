@@ -29,3 +29,5 @@ Thumbs.db
 # --- Ngrok config & files ---
 *.ngrok.log
 ngrok.yml
+
+service-account.json

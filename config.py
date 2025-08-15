@@ -13,3 +13,8 @@ INDEX_NAME = "web-data"
 EMBED_MODEL = "text-embedding-3-small"
 CHAT_MODEL = "gpt-5-mini"
 TOP_K = 3
+
+SERVICE_ACCOUNT_FILE= "./service-account.json"
+GOOGLE_DRIVE_FOLDER_ID = os.getenv("GOOGLE_DRIVE_FOLDER_ID")
+
+
