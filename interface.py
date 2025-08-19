@@ -10,7 +10,7 @@ st.set_page_config(page_title="Carching Support", page_icon="🚗")
 try:
     client = OpenAI(api_key=config.OPENAI_API_KEY)
     pc = Pinecone(api_key=config.PINECONE_API_KEY)
-    index = pc.Index("web-data")
+    index = pc.Index(config.DEMO_INDEX_NAME)
 except Exception as e:
     st.error(f"Failed to initialize services: {str(e)}")
     st.stop()
@@ -31,27 +31,55 @@ if st.sidebar.button("🗑️ Clear Chat"):
     st.experimental_rerun()
 
 
-def retrieve_context(query):
+def retrieve_context(query: str) -> str:
     try:
-        response = client.embeddings.create(
+        # Embed the query
+        emb = client.embeddings.create(
             model=config.EMBED_MODEL,
             input=query
-        )
-        query_emb = response.data[0].embedding
+        ).data[0].embedding
 
+        # Query Pinecone for nearest chunks
         result = index.query(
-            vector=query_emb,
-            top_k=config.TOP_K,
-            include_metadata=True
+            vector=emb,
+            top_k=getattr(config, "TOP_K", 5),
+            include_metadata=True,
+            include_values=False,
+            namespace=getattr(config, "NAMESPACE", None)
         )
 
-        contexts = []
-        for match in result.matches:
-            meta = match.metadata
-            context_str = f"Title: {meta['title']}\nContent: {meta['content']}"
-            contexts.append(context_str)
+        matches = getattr(result, "matches", []) or []
+        if not matches:
+            return ""
 
-        return "\n\n".join(contexts)
+        min_score = getattr(config, "MIN_SCORE", 0.0)
+        max_chars = getattr(config, "MAX_CONTEXT_CHARS", 8000)
+
+        # Build compact, provenance-rich context
+        contexts = []
+        total = 0
+        for m in matches:
+            score = getattr(m, "score", None)
+            if score is not None and score < min_score:
+                continue
+
+            meta = m.metadata or {}
+            text = meta.get("text") or ""
+            if not text:
+                continue
+
+            file_name = meta.get("file_name", "")
+            chunk_num = meta.get("chunk_num")
+            header = f"Source: {file_name}" + (f" (chunk {chunk_num})" if chunk_num is not None else "")
+            snippet = f"{header}\n{text}" if header.strip() else text
+
+            if total + len(snippet) > max_chars:
+                break
+
+            contexts.append(snippet)
+            total += len(snippet)
+
+        return "\n\n---\n\n".join(contexts)
     except Exception as e:
         st.warning(f"Couldn't retrieve context: {str(e)}")
         return ""
