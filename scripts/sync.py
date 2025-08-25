@@ -7,7 +7,7 @@ import time
 import config
 from googleapiclient.discovery import build
 from google.oauth2 import service_account
-import utils
+from .utils import split_text
 
 # Configure logging
 logging.basicConfig(
@@ -24,7 +24,6 @@ pc = Pinecone(
 openai = OpenAI(
     api_key=config.OPENAI_API_KEY
 )
-
 
 def get_drive_service():
     logger.debug("Initializing Google Drive service")
@@ -93,7 +92,7 @@ if __name__ == "__main__":
             logger.info(f"Processing file: {file['name']} (ID: {file['id']})")
             content = extract_doc_text(file['id'])
 
-            chunks = utils.split_text(content)
+            chunks = split_text(content)
             logger.info(f"Split {file['name']} into {len(chunks)} chunks")
 
             file_id, file_name = file['id'], file['name']
