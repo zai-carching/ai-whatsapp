@@ -1,6 +1,7 @@
 from flask import Blueprint, request, jsonify
 import logging
 from . import whatsapp
+from .decorators import whatsapp_signature_required
 import json
 
 import config
@@ -31,6 +32,7 @@ def webhook_get():
 
 
 @webhook_blueprint.route('/whatsapp/webhook', methods=['POST'])
+@whatsapp_signature_required
 def whatsapp_webhook_post():
     body = request.get_json()
     # logging.info(f"request body: {body}")
