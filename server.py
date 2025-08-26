@@ -1,16 +1,10 @@
-from fastapi import FastAPI, Request
-from openai import OpenAI
-from pinecone import Pinecone
-from app import routes
+import logging
 
-import config
+from app import create_app
 
-app = FastAPI()
-openai = OpenAI(api_key=config.OPENAI_API_KEY)
-pc = Pinecone(api_key=config.PINECONE_API_KEY)
-index = pc.Index(config.INDEX_NAME)
 
-app.include_router(routes.router)
-@app.get("/")
-def get_root():
-    return {"message": "Hello World"}
+app = create_app()
+
+if __name__ == "__main__":
+    logging.info("Flask app started")
+    app.run(host="0.0.0.0", port=8000)
