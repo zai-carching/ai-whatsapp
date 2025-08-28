@@ -81,15 +81,18 @@ def process_whatsapp_message(body):
     message = body["entry"][0]["changes"][0]["value"]["messages"][0]
     message_body = message["text"]["body"]
 
-    # TODO: implement custom function here
+    # Generate AI response
     response = generate_response(message_body)
 
-    # OpenAI Integration
-    # response = generate_response(message_body, wa_id, name)
-    # response = process_text_for_whatsapp(response)
+    # Process styling for WhatsApp
+    response = process_text_for_whatsapp(response)
+
+    # Append AI attribution
+    response += "\n\n_(Replied by AI)_"
 
     data = get_text_message_input(wa_id, response)
     send_message(data)
+
 
 
 def is_valid_whatsapp_message(body):
