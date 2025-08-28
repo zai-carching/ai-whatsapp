@@ -10,3 +10,13 @@ services:
       - .:/app  # useful for dev hot reload (remove in production)
     environment:
       - ENV=development
+
+  ngrok:
+    image: ngrok/ngrok:latest
+    container_name: ngrok_tunnel
+    command: >
+      http --domain=positive-lightly-pika.ngrok-free.app web:8000
+    environment:
+      - NGROK_AUTHTOKEN=31rnnwOaTxzgpdung5HXV3NRjNX_nZwvY5HMh6q6oGhsAubk
+    depends_on:
+      - web
