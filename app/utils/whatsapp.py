@@ -1,7 +1,7 @@
 import logging
 from flask import jsonify
 import requests
-from . import llm
+from app.utils import llm
 
 import re
 
@@ -24,7 +24,7 @@ def get_text_message_input(recipient, text):
 
 
 def generate_response(req):
-    _, response = llm.generate(req,[],config.SYSTEM_PROMPT,config.CHAT_MODEL)
+    _, response = llm.generate(req, [], config.SYSTEM_PROMPT, config.CHAT_MODEL)
     return response
 
 

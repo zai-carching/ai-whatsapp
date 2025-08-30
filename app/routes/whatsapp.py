@@ -1,14 +1,14 @@
 from flask import Blueprint, request, jsonify
 import logging
-from . import whatsapp
-from .decorators import whatsapp_signature_required
+from app.utils import whatsapp
+from app.utils.decorators import whatsapp_signature_required
 import json
 
 import config
 
-webhook_blueprint = Blueprint("webhook", __name__)
+whatsapp_blueprint = Blueprint("webhook", __name__)
 
-@webhook_blueprint.route('/whatsapp/webhook',methods=['GET'])
+@whatsapp_blueprint.route('/whatsapp/webhook', methods=['GET'])
 def webhook_get():
     # Parse params from the webhook verification request
     mode = request.args.get("hub.mode")
@@ -31,7 +31,7 @@ def webhook_get():
         return jsonify({"status": "error", "message": "Missing parameters"}), 400
 
 
-@webhook_blueprint.route('/whatsapp/webhook', methods=['POST'])
+@whatsapp_blueprint.route('/whatsapp/webhook', methods=['POST'])
 @whatsapp_signature_required
 def whatsapp_webhook_post():
     body = request.get_json()
