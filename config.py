@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 INDEX_NAME = "web-data"
-DEMO_INDEX_NAME = "testo"
+DEMO_INDEX_NAME = "testo-1"
 EMBED_MODEL = "text-embedding-3-small"
 CHAT_MODEL = "gpt-3.5-turbo"
 TOP_K = 3
@@ -33,3 +33,4 @@ WHATSAPP_APP_ID = os.getenv("WHATSAPP_APP_ID")
 WHATSAPP_APP_SECRET = os.getenv("WHATSAPP_APP_SECRET")
 
 FRIDAY_API_URL = os.getenv("FRIDAY_API_URL")
+DATABASE_URL = os.getenv("DATABASE_URL")

@@ -5,7 +5,7 @@ services:
     build: .
     container_name: carching_whatsapp
     ports:
-      - "8000:8000"
+      - "5000:5000"
     volumes:
       - .:/app  # useful for dev hot reload (remove in production)
     environment:
@@ -15,7 +15,7 @@ services:
     image: ngrok/ngrok:latest
     container_name: ngrok_tunnel
     command: >
-      http --domain=positive-lightly-pika.ngrok-free.app web:8000
+      http --domain=positive-lightly-pika.ngrok-free.app web:5000
     environment:
       - NGROK_AUTHTOKEN=31rnnwOaTxzgpdung5HXV3NRjNX_nZwvY5HMh6q6oGhsAubk
     depends_on:

@@ -4,3 +4,5 @@ python-dotenv
 pinecone==7.3.0
 google-api-python-client
 streamlit
+psycopg2-binary
+flask-sqlalchemy
