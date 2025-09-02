@@ -2,11 +2,11 @@ name: Daily Sync
 
 on:
   schedule:
-    - cron: '*/5 * * * *' # Runs every 5 minutes
+    - cron: '30 17 * * *'
 
 jobs:
   sync:
     runs-on: ubuntu-latest
     steps:
       - name: Call sync endpoint
-        run: curl -X POST https://positive-lightly-pika.ngrok-free.app/sync
+        run: curl -s --fail -X POST https://positive-lightly-pika.ngrok-free.app/sync
