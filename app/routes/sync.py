@@ -20,8 +20,6 @@ openai = OpenAI(
     api_key=config.OPENAI_API_KEY
 )
 
-index_name = config.DEMO_INDEX_NAME
-
 
 def create_embedding(text: str):
     logger.debug("Generating embedding")
@@ -32,7 +30,7 @@ def create_embedding(text: str):
     return response.data[0].embedding
 
 
-def sync_api_data(contexts: list[Tuple[str, str]]) -> None:
+def sync_api_data(index_name: str, contexts: list[Tuple[str, str]]) -> None:
     index = pc.Index(index_name)
 
     logger.info("Starting API data synchronization")
@@ -72,7 +70,7 @@ def sync_api_data(contexts: list[Tuple[str, str]]) -> None:
 
 
 
-def sync_docs_data() -> None:
+def sync_docs_data(index_name: str) -> None:
     index = pc.Index(index_name)
 
     logger.info("Starting document processing")
@@ -125,19 +123,38 @@ def sync_docs_data() -> None:
             logger.error(f"Failed to process {file['name']}: {str(e)}", exc_info=True)
 
 @sync_blueprint.route('/sync', methods=['POST'])
-def sync():
-    if pc.has_index(index_name):
-        logger.info(f"Deleting existing index '{index_name}'")
-        pc.delete_index(index_name)
+def handle_sync():
+    demo_index = config.DEMO_INDEX_NAME
+    actual_index = config.INDEX_NAME
 
-    logger.info(f"Creating new Pinecone index '{index_name}'")
-    pc.create_index(index_name, dimension=1536, metric="cosine", spec=ServerlessSpec(cloud="aws", region="us-east-1"))
+    try:
+        if pc.has_index(demo_index):
+            logger.info(f"Deleting existing index '{demo_index}'")
+            pc.delete_index(demo_index)
 
-    # Fetch AI contexts from Friday API
-    contexts = friday.get_ai_context()
+        logger.info(f"Creating new Pinecone index '{demo_index}'")
+        pc.create_index(demo_index, dimension=1536, metric="cosine", spec=ServerlessSpec(cloud="aws", region="us-east-1"))
 
-    # Sync data from Friday API and Google Docs
-    sync_api_data(contexts)
-    sync_docs_data()
+        contexts = friday.get_ai_context()
+        sync_api_data(demo_index, contexts)
+        sync_docs_data(demo_index)
+    except Exception as e:
+        logger.error(f"Failed to sync demo index: {str(e)}", exc_info=True)
+        return {"status": "error", "message": f"Demo index sync failed: {str(e)}"}, 500
+
+    try:
+        if pc.has_index(actual_index):
+            logger.info(f"Deleting existing index '{actual_index}'")
+            pc.delete_index(actual_index)
+
+        logger.info(f"Creating new Pinecone index '{actual_index}'")
+        pc.create_index(actual_index, dimension=1536, metric="cosine", spec=ServerlessSpec(cloud="aws", region="us-east-1"))
+
+        contexts = friday.get_ai_context()
+        sync_api_data(actual_index, contexts)
+        sync_docs_data(actual_index)
+    except Exception as e:
+        logger.error(f"Failed to sync actual index: {str(e)}", exc_info=True)
+        return {"status": "error", "message": f"Actual index sync failed: {str(e)}"}, 500
 
     return {"status": "success", "message": "Data synchronized successfully"}, 200

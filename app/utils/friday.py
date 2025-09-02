@@ -42,6 +42,11 @@ def parse_all_info_from_response(response_json) -> list[Tuple[str, str]]:
 
 def get_ai_context() -> list[Tuple[str, str]]:
     url = f"{config.FRIDAY_API_URL}/api/ai-context"
-    response = requests.get(url, timeout=10)
-    response.raise_for_status()
-    return parse_all_info_from_response(response.json())
+    try:
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()
+        return parse_all_info_from_response(response.json())
+    except Exception as e:
+        # Log the error if logging is set up, or print for now
+        print(f"Error fetching AI context: {e}")
+        return []
