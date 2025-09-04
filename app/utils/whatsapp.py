@@ -2,6 +2,8 @@ import logging
 from flask import jsonify
 import requests
 from app.utils import llm
+from app.models import WhatsappMessage
+from app.extensions import db
 
 import re
 
@@ -23,12 +25,13 @@ def get_text_message_input(recipient, text):
     }
 
 
-def generate_response(req):
-    _, response = llm.generate(req, [], config.SYSTEM_PROMPT, config.CHAT_MODEL)
+def generate_response(req,wa_id):
+    chat_history = retrieve_user_message_as_history(wa_id)
+    _, response = llm.generate(req, chat_history, config.SYSTEM_PROMPT, config.CHAT_MODEL)
     return response
 
 
-def send_message(data):
+def send_message(data) -> bool:
     headers = {
         "Content-type": "application/json",
         "Authorization": f"Bearer {config.WHATSAPP_ACCESS_TOKEN}",
@@ -41,6 +44,13 @@ def send_message(data):
             url, json=data, headers=headers, timeout=10
         )  # 10 seconds timeout as an example
         response.raise_for_status()  # Raises an HTTPError if the HTTP request returned an unsuccessful status code
+
+        # Save bot message to DB
+        bot_message = WhatsappMessage(user_id=data["to"], text=data["text"]["body"], is_received=False)
+        db.session.add(bot_message)
+        db.session.commit()
+
+
     except requests.Timeout:
         logging.error("Timeout occurred while sending message")
         return jsonify({"status": "error", "message": "Request timed out"}), 408
@@ -82,16 +92,24 @@ def process_whatsapp_message(body):
     message_body = message["text"]["body"]
 
     # Generate AI response
-    response = generate_response(message_body)
+    response = generate_response(message_body, wa_id)
+    logging.info(f"AI response before processing: {response}")
+
+    # Save user message to DB
+    user_message = WhatsappMessage(user_id=wa_id, text=message_body, is_received=True)
+    db.session.add(user_message)
+    db.session.commit()
 
     # Process styling for WhatsApp
     response = process_text_for_whatsapp(response)
 
     # Append AI attribution
-    response += "\n\n_(Replied by AI)_"
+    # response += "\n\n_(Replied by AI)_"
 
     data = get_text_message_input(wa_id, response)
+
     send_message(data)
+
 
 
 
@@ -107,3 +125,16 @@ def is_valid_whatsapp_message(body):
         and body["entry"][0]["changes"][0]["value"].get("messages")
         and body["entry"][0]["changes"][0]["value"]["messages"][0]
     )
+
+
+def retrieve_user_message_as_history(user_id: str):
+    messages = WhatsappMessage.query.filter_by(user_id=user_id)
+    message_history = []
+
+    for message in messages:
+        role = "user" if message.is_received else "assistant"
+        content = message.text if message.text else ""
+        if content:
+            message_history.append({"role": role, "content": content})
+
+    return message_history
